@@ -1,5 +1,5 @@
 
-from tools import get_current_time,generate_password,roll_dice
+from tools import get_current_time,generate_password,roll_dice, read_text_file
 
 
 def execute_tool(input):
@@ -12,6 +12,15 @@ def execute_tool(input):
         
     elif "roll" in user_input or "dice" in user_input:
         return roll_dice()
+
+    elif "summarize" in user_input or "explain" in user_input:
+        filename = ''
+        if "summarize" in user_input:
+            filename = user_input[10:]
+        elif "explain" in user_input:
+            filename = user_input[8:]
+        content =  read_text_file(f"data/{filename}")
+        return content
     else:
         return None
             

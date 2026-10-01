@@ -53,24 +53,29 @@ while True:
     # Taking user input
     user_input = input(" You: ")
 
-    # Start: Pattern (Matching) based toll integration 
-    """ 
-    if "time" in user_input.lower() or "clock" in user_input.lower():
-        print(" Assistant: ", get_current_time())
+    # Used file Read tool (with tool manager) to summarize ans explain the content of file as
+    # per query of user (Openartion and name of file is passed in user query)
+    if "summarize" in user_input.lower() or "explain" in user_input.lower():
+        read_file_tool_result = execute_tool(user_input)
+        prompt =''
+        if "summarize" in user_input.lower():
+            prompt = f"""
+                Please summarize the document.
+                Document content is:
+                {read_file_tool_result}
+            """
+        elif "explain" in user_input.lower():
+            prompt = f"""Please explain the document in 30 words.
+                            Document content is:
+                            {read_file_tool_result}
+                        """
+        response = client.chat.completions.create(model=os.getenv("MODEL"),
+                                                  messages=[{"role":"user", "content":prompt}])
+        ai_res = response.choices[0].message.content
+        print(" Assistant: ", ai_res)
         continue
-
-    if "password" in user_input.lower() or "passcode" in user_input.lower():
-            print(" Assistant: ", generate_password())
-            continue
-    
-    if "roll" in user_input.lower() or "dice" in user_input.lower():
-            print(" Assistant: ", roll_dice())
-            continue
- """
-    # End: Pattern (Matching) based tool integration 
-    
+            
     # Use tool manager to decide tool call and respective result
-
     tool_result = execute_tool(user_input)
 
     # Check if tool result has then print and continue else got to AI model call.

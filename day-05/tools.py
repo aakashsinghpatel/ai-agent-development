@@ -22,12 +22,15 @@ def generate_password(length=12):
 
 
 # Tool to read file and handle error gracefully
-def read_file(filename):
+def read_text_file(filename):
     # Tool to read the file from local system available in data folder
-    # try:
+    try:
+        # with: open file context such that close file auto after
+        #  operation so that no need to close file manually after open
         with open(filename, "r") as file:
             content = file.read()
             return content
-    # except FileNotFoundError:
-        # return "Error: File not found"
+    # Handling error gracefully to refrain the program close unexepetadly
+    except FileNotFoundError:
+        return "Error: File not found"
     
