@@ -1,4 +1,4 @@
-Teach your AI Assitant to Read the file
+Teach your AI Assitant to Read the file (Explain/Summarize the file content also ask the questio form file content)
 
 AI Assistant does not have access to access/browse/read/ write folder/file of system.
 
@@ -39,3 +39,44 @@ process large file content.
 This Envoked RAG (Retrieval Augumentated generation).
 
 RAG is not replacement to ducument AI assitant but it is an extended version to process large document collection and answer queries.
+
+
+
+#### Ask question from the document:
+Till now we just asked to summarize/explain the file content.
+Now user is asking for queries from the content of file.
+Here prompt need 3 thing:
+1. Document content
+2. User query
+3. Clear intruction: like respons the query based on availa document.
+if not avaibe just say details not availbel
+
+It is prompt engineering.
+
+qury will: ask python.txt what is python
+ part 0: ask, part1: file name, part2: query
+ userinput.split(maxpart=2) as starts with 0 :: split into 3 part
+
+ Here prompt is diffent used for summary, explian dox and ask query form document.
+
+ Smae model  is used jsy based on user queries and inout differner prompt is used to process the document content in AI model to get expected result
+
+
+
+ ### Understand why we need RAG::
+    Till now we have build document question answering system
+    it works
+     Read Documnent -> Read question -> Combine document content with question -> Sent to AI model -> Get the response
+
+     Same pattern ca be use for email, contrcts, meeting notes, atricle, notes.
+
+This all work for small document but problem occur when
+1. Documnet is large in size and eaxh LLM has context limit for send data in single request.
+2. even if limit is enought/large (750 pages) sending huge data in request for small query will be expenssive.
+
+RAG: If ther are 1000'of document, file, pdf an user ask the query then to get the relevent answer which file. doc, PDF, para to refer so that get the answer withouth readinf all.
+
+This was the issue in modern AI system.
+
+RAG  (Retrieval AUgumented generatio) solve this problem.
+IN RAG, Instead of sendoing whole document to AI model just sent most relevent doc to AI model for response genration.

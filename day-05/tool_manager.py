@@ -13,12 +13,15 @@ def execute_tool(input):
     elif "roll" in user_input or "dice" in user_input:
         return roll_dice()
 
-    elif "summarize" in user_input or "explain" in user_input:
+    elif "summarize" in user_input or "explain" in user_input or "ask" in user_input:
         filename = ''
         if "summarize" in user_input:
             filename = user_input[10:]
         elif "explain" in user_input:
             filename = user_input[8:]
+        elif "ask" in user_input:
+            parts = str(user_input).split(maxsplit=2)
+            filename = parts[1]
         content =  read_text_file(f"data/{filename}")
         return content
     else:

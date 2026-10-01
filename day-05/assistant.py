@@ -55,7 +55,7 @@ while True:
 
     # Used file Read tool (with tool manager) to summarize ans explain the content of file as
     # per query of user (Openartion and name of file is passed in user query)
-    if "summarize" in user_input.lower() or "explain" in user_input.lower():
+    if "summarize" in user_input.lower() or "explain" in user_input.lower() or user_input.lower().startswith("ask"):
         read_file_tool_result = execute_tool(user_input)
         prompt =''
         if "summarize" in user_input.lower():
@@ -69,6 +69,18 @@ while True:
                             Document content is:
                             {read_file_tool_result}
                         """
+        # Query : ask filename quey
+        # here filename and query is takne aout created prompt with document and processed to get 
+        # output 
+        elif user_input.startswith("ask"): 
+            parts = str(user_input).split(maxsplit=2)
+            user_query = parts[2]
+            prompt = f"""You have been given an document content.
+            Answer the user question using the information present in the document 
+            if answer is not available then do not invent the answer: just say 'I couldn;t find the information in the document.'
+            Document: {read_file_tool_result}
+            Question: {user_query}
+            """
         response = client.chat.completions.create(model=os.getenv("MODEL"),
                                                   messages=[{"role":"user", "content":prompt}])
         ai_res = response.choices[0].message.content

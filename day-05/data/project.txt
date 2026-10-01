@@ -1,0 +1,17 @@
+Sample Project
+
+Project Name: Simple Calculator
+
+Description:
+This project is a basic calculator created using Python. It can perform addition, subtraction, multiplication, and division.
+
+Features:
+- Easy to use
+- Simple Python code
+- Performs basic calculations
+
+Technology:
+Python
+
+Purpose:
+This project is designed for beginners to practice basic Python programming concepts.
