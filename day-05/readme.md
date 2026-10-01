@@ -1,8 +1,8 @@
-Teach your AI Assitant to Read the file (Explain/Summarize the file content also ask the questio form file content)
+Teach your AI Assitant to Read the file (Explain/Summarize the file content also ask the question form file content)
 
 AI Assistant does not have access to access/browse/read/ write folder/file of system.
 
-hance tool is createed to do all this operation and file content further shared to AI assitan tto perform further operation(Genration, summerization, briefing ) etc.
+hance tool is createed to do all this operation and file content further shared to AI assitan to perform further operation(Generation, summerization, briefing ) etc.
 
 PYthon program reads the file and further shared the content with AI Model (Assistant)
 
@@ -71,12 +71,12 @@ qury will: ask python.txt what is python
      Same pattern ca be use for email, contrcts, meeting notes, atricle, notes.
 
 This all work for small document but problem occur when
-1. Documnet is large in size and eaxh LLM has context limit for send data in single request.
+1. Documnet is large in size and each LLM has context limit for send data in single request.
 2. even if limit is enought/large (750 pages) sending huge data in request for small query will be expenssive.
 
-RAG: If ther are 1000'of document, file, pdf an user ask the query then to get the relevent answer which file. doc, PDF, para to refer so that get the answer withouth readinf all.
+RAG: If ther are 1000'of document, file, pdf an user ask the query then to get the relevent answer which file. doc, PDF, para to refer so that get the answer without reading all.
 
 This was the issue in modern AI system.
 
 RAG  (Retrieval AUgumented generatio) solve this problem.
-IN RAG, Instead of sendoing whole document to AI model just sent most relevent doc to AI model for response genration.
+IN RAG, Instead of sending whole document to AI model just sent most relevent doc to AI model for response genration.
