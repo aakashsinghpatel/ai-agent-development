@@ -6,6 +6,9 @@ import os
 # import all tools
 from tools import (get_current_time,generate_password,roll_dice)
 
+# import tool manager
+from tool_manager import execute_tool
+
 # Load the configuration from environment file
 load_dotenv()
 
@@ -51,7 +54,7 @@ while True:
     user_input = input(" You: ")
 
     # Start: Pattern (Matching) based toll integration 
-    
+    """ 
     if "time" in user_input.lower() or "clock" in user_input.lower():
         print(" Assistant: ", get_current_time())
         continue
@@ -63,9 +66,17 @@ while True:
     if "roll" in user_input.lower() or "dice" in user_input.lower():
             print(" Assistant: ", roll_dice())
             continue
-
+ """
     # End: Pattern (Matching) based toll integration 
     
+    # Use tool manager to decide tool call and respective result
+
+    tool_result = execute_tool(user_input)
+
+    # Check if tool result has then print and continue else got to AI model call.
+    if tool_result:
+        print(" Assistant: ", tool_result)
+        continue
 
     if(user_input.lower() == 'quit'):
         print("Thank for journey, Good Day!..")
