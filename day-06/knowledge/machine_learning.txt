@@ -1,0 +1,8 @@
+Machine learning is a branch of artificial intelligence.
+It enables computers to learn from data.
+Machine learning algorithms identify patterns in information.
+They can make predictions and support decision-making.
+Machine learning is used in many industries.
+Applications include image recognition and fraud detection.
+It is also used in healthcare and finance.
+Machine learning continues to develop rapidly.

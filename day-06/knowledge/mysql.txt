@@ -1,0 +1,8 @@
+MySQL is a popular relational database management system.
+It is used to store and manage data.
+MySQL uses SQL for database operations.
+It supports tables, queries, and relationships.
+MySQL is widely used in web applications.
+It is fast, reliable, and secure.
+MySQL can handle large amounts of data.
+It is easy to integrate with programming languages.
