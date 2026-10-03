@@ -117,3 +117,7 @@ Ai AGennt has planner without
     Means now agent: Just has e AI Assitant + Planner + RAG + Memory
         nO need to maintain tool and dicision (Python code with if else) to execute it
 
+MCP: Model context protocaol
+Model: LLM model
+COntent: Capability to acces external tool, DB, file
+Protocaol: Standard rule to have acces to contest (Cleint server)
