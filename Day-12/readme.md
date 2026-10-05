@@ -233,6 +233,9 @@ Hence, break the document into chunks, create embedding of chunks and later retu
     * Hybrid serch (Seentic serch + keyword search)
     * FAIIS: vector indexing technique
     * ChromaDB: vector storage and retrival
+### code with workflow:
+
+user query (main.py) -> user embeddign(embedding.py) -> search (chroma_store.py) -> retrieve results(advance_rag.py) -> Hybrid search(semention<advance_rag.py>+ keyword_scrore(retriver.py))-> Reranking -> Top context results (reranked.py) -> return to main (main.py) -> ollama genrate anwser(generator.py) -> answer 
 
     Till now::
         Day 9: Atonomus agent
