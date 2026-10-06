@@ -21,3 +21,22 @@ async def discover_tool(client):
 """ Method to execute the tool of on passd client linked server """
 async def execute_tool(client, tool_name, argument=None):
     return await client.call_tool(tool_name, argument)
+
+""" Method to get all available Resource of MCP server """
+async def discover_resources(client):
+    tools = await client.list_resources()
+    return tools
+
+
+""" Method to get all available prompt of server """
+async def discover_prompts(client):
+    tools = await client.list_prompts()
+    return tools
+
+""" Method to get specific resourse from MCP server """
+async def run_resource(client,URI):
+    return  await client.read_resource(URI)
+
+""" Method to get specific prompt from MCP seever """
+async def retrieve_prompt(client, prompt_name,argument=None):
+    return await client.get_prompt(prompt_name, argument)

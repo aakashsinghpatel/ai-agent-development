@@ -1,5 +1,6 @@
 from pathlib import Path 
-from mcp_client  import connect, disconnet, discover_tool, execute_tool
+from mcp_client  import (connect, disconnet, discover_tool, execute_tool, 
+                         discover_prompts, discover_resources, retrieve_prompt, run_resource)
 
 
 async def create_tool_registory(servers_path):
@@ -35,3 +36,17 @@ async def run_tool(tool_name:str, tool_registory,argument=None):
 async def close_server(clients):
     for client in clients:
         await disconnet(client)
+
+
+async def get_all_resources_prompt(client):
+    resources = await discover_resources(client)
+    prompts = await discover_prompts(client)
+
+    return prompts, resources
+
+
+async def get_resource(client, URI):
+    return await run_resource(client, URI)
+
+async def get_prompt(client, prompt_name, argument=None):
+    return await retrieve_prompt(client, prompt_name, argument)
