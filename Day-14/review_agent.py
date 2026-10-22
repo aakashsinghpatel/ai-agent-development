@@ -1,6 +1,7 @@
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
+import json
 
 load_dotenv()
 
@@ -52,4 +53,4 @@ def review_code(task,code):
             {"role":"user", "content":prompt}
     ])
 
-    return  response.choices[0].message.content
+    return  json.loads(response.choices[0].message.content)

@@ -6,7 +6,7 @@ load_dotenv()
 
 client = OpenAI(base_url=os.getenv("BASE_URL"), api_key=os.getenv("API_KEY"))
 
-def write_code(task, research_result):
+def write_code(task, research_result, feedback=""):
     prompt = f"""
     You are a Coding Agent.
     
@@ -17,6 +17,12 @@ def write_code(task, research_result):
   
     Research:
     {research_result}
+
+    Previous Reviewer Feedback:
+    {feedback}
+    
+    If reviewer feedback is provided,
+    correct the identified problems.
     
     Return:
     

@@ -17,85 +17,60 @@ client = OpenAI(base_url=os.getenv("BASE_URL"), api_key=os.getenv("API_KEY"))
 def choose_worker(state):
 
     prompt = f"""
-    You are the Manager Agent in a multi-agent system.
+    You are the Manager Agent.
 
-    Your ONLY responsibility is to decide which worker should execute NEXT based on the current state.
+    Your job is to decide which worker
+    should act NEXT.
 
-    Do NOT perform the task yourself.
-    Do NOT explain your reasoning.
-    Do NOT generate code.
-    Do NOT generate research.
-    Do NOT review anything.
-
-    ========================
-    ORIGINAL TASK
-    ========================
+    Original Task:
     {state["task"]}
 
-    ========================
-    CURRENT STATE
-    ========================
-    Research: {state["research"]}
+    Research:
+    {state["research"]}
 
-    Code: {state["code"]}
+    Code:
+    {state["code"]}
 
-    Review: {state["review"]}
+    Review:
+    {state["review"]}
 
-    Execution History : {state["history"]}
+    History:
+    {state["history"]}
 
-    ========================
-    AVAILABLE ACTIONS
-    ========================
-
-    research
-    coding
-    review
-    finish
-
-    ========================
-    DECISION RULES
-    ========================
-
-    Follow these rules EXACTLY and in this order:
-
-    1. If Research is empty: return research
-
-    2. Otherwise, if Code is empty: return coding
-
-    3. Otherwise, if Review is empty: return review
-
-    4. Otherwise: return finish
-
-    IMPORTANT:
-    - Never select research when Research is already available.
-    - Never select coding when Code is already available.
-    - Never select review when Review is already available.
-    - Never select finish if Research, Code, or Review is empty.
-    - Do not consider the contents of the fields when deciding whether they are complete. Only check whether they are empty or non-empty.
-    - The Execution History is informational only. The current state has higher priority.
-
-    ========================
-    OUTPUT FORMAT
-    ========================
-
-    Return EXACTLY ONE word.
-
-    Valid outputs are:
+    Available workers:
 
     research
     coding
     review
     finish
 
-    Do not return:
-    - explanations
-    - sentences
-    - markdown
-    - backticks
-    - punctuation
-    - additional words
+    Decision rules:
 
-    Example: review
+    - If research is empty, choose research.
+
+    - If research exists and code is empty,
+    choose coding.
+
+    - If a review exists with status
+    "needs_revision", choose coding.
+
+    - If code exists and there is no review,
+    choose review.
+
+    - If the previous review requested
+    revision and new code has been generated,
+    choose review again.
+
+    - If the latest review status is
+    "approved", choose finish.
+
+    Return ONLY one word:
+
+    research
+    coding
+    review
+    finish
+
     """
     response = client.chat.completions.create(model=os.getenv("ASSISTANT_MODEL"), messages=[{"role": "user","content": prompt}])
 
@@ -113,7 +88,10 @@ def d_run_manager(task):
             state["research"] = research(state["task"])
             state["history"].append("research")
         elif worker == "coding":
-            state["code"] = write_code(state["task"], state["research"])
+            feedback = ""
+            if state["review"]:
+                feedback = state["review"].get("feedback","")
+            state["code"] = write_code(state["task"], state["research"], feedback)
             state["history"].append("coding")
 
         elif worker == "review":
