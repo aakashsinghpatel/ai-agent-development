@@ -13,6 +13,7 @@ load_dotenv()
 
 client = OpenAI(base_url=os.getenv("BASE_URL"), api_key=os.getenv("API_KEY"))
 
+MAX_REVISIONS = 3
 
 def choose_worker(state):
 
@@ -36,6 +37,12 @@ def choose_worker(state):
 
     History:
     {state["history"]}
+
+    Revision Count:
+    {state["revision_count"]}
+
+    Maximum Revisions:
+    {MAX_REVISIONS}
 
     Available workers:
 
@@ -64,6 +71,9 @@ def choose_worker(state):
     - If the latest review status is
     "approved", choose finish.
 
+    - If the maximum revision count has
+    been reached, choose finish.
+
     Return ONLY one word:
 
     research
@@ -88,6 +98,9 @@ def d_run_manager(task):
             state["research"] = research(state["task"])
             state["history"].append("research")
         elif worker == "coding":
+            if (state["review"]and state["revision_count"] >= MAX_REVISIONS):
+                print("Maximum revisions reached.")
+                break
             feedback = ""
             if state["review"]:
                 feedback = state["review"].get("feedback","")
@@ -95,6 +108,7 @@ def d_run_manager(task):
             state["history"].append("coding")
 
         elif worker == "review":
+            state["revision_count"] = state["revision_count"] + 1;
             state["review"] = review_code(state["task"],state["code"])
             state["history"].append("review")
         elif worker == "finish":
