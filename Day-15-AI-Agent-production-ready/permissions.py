@@ -15,7 +15,9 @@ TOOL_PERMISSIONS = {
     "manager": {"get_weather","read_file"}
 }
 
-
+""" Prompt Injection: protection technique """ 
+# This can be use against prompt injection, where it been asked by agent to delet file
+#  so from her can check whether dele file allowed by agent of not
 def is_tool_allowed(agent_name,tool_name):
     allowed_tools = (TOOL_PERMISSIONS.get(agent_name,set()))
 
