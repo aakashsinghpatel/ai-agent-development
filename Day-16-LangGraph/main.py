@@ -26,24 +26,30 @@ async def main():
     print("**** My autonomous AI Agent *********")
     print("="*40)
 
-    graph = build_graph(tool_list)
+    graph = build_graph(tool_list, mcp_client)
 
     user_request = input(" You:")
 
     initial_state = {
         "user_request": user_request,
         "current_step": 0,
-        "max_steps": 5,
+        "max_step": 5,
         "actions": [],
         "observations": [],
         "finished": False,
+        "action":'',
         "final_answer": ""
     }
 
-    fianl_state =graph.invoke(initial_state)
+    # final_state = graph.invoke(initial_state)
+
+    # Run graph asynchronously
+    final_state = await graph.ainvoke(initial_state)
+
+    
     print()
     print("Final Answer:")
-    print(fianl_state["final_answer"])
+    print(final_state['final_answer'])
     await disconnect(mcp_client)
     
 
