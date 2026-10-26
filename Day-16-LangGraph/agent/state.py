@@ -9,3 +9,4 @@ class AgentState(TypedDict):
     finish: bool
     action: str
     final_answer: str
+    approval: str
