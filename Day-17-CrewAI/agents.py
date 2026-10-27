@@ -1,6 +1,6 @@
 from crewai import Agent
 from llm import llm
-
+from mcp_tools import mcp_current_time
 research_agent = Agent(role="AI Research", 
                        goal=(
                         "Research AI agent concepts "
@@ -10,6 +10,7 @@ research_agent = Agent(role="AI Research",
                             "specialized in AI agents."
                         ), 
                         llm=llm,
+                        tools=[mcp_current_time],
                         verbose=True)
 
 coder_agent = Agent(

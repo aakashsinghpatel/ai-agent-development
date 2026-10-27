@@ -13,6 +13,9 @@ research_task = Task(
         "autonomous AI agents. "
         "Explain the agent loop, "
         "tools, state and observations."
+         "Before completing the task, use "
+          "the MCP Current Time tool and "
+        "include the returned time."
     ),
     expected_output=(
         "A concise technical explanation "
