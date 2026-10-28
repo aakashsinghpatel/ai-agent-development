@@ -9,6 +9,8 @@ from agents import (
 
 research_task = Task(
     description=(
+        " My name is Akash patel and keep remeber my name for"
+        " future tasks"
         "Research the concept of "
         "autonomous AI agents. "
         "Explain the agent loop, "
@@ -58,4 +60,8 @@ review_task = Task(
         coding_task
     ]
 )
+
+memory_task = Task(
+                description="What is my name that i have told u in my previos task",
+                   expected_output="The name of the person.", agent=research_agent)
 
