@@ -3,11 +3,17 @@ from bs4 import BeautifulSoup as bs
 from urllib.parse import urlparse, parse_qs
 
 
-def search_web(query, MAX_RESULT=5):
-    """ This tool will serach the web for the query with DuckDuckGO.
-     arguments: query
-      Result: List of top max element result
-        [{title, URL}] """
+def search_web(query, max_results=5):
+    """
+        Search the web using DuckDuckGo.
+    
+        Args:
+            query: Search query.
+            max_results: Maximum number of results.
+    
+        Returns:
+            A list of search results.
+    """
     headers = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -23,10 +29,9 @@ def search_web(query, MAX_RESULT=5):
         respose.raise_for_status()
 
         soup =  bs(respose.text, "html.parser")
-        print(soup)
         results =[]
         print(len(soup.select(".results")))
-        for result in soup.select(".result")[:MAX_RESULT]:
+        for result in soup.select(".result")[:max_results]:
             title = result.select_one(".result__title")
             url = result.select_one(".result__a")
             snippet =result.select_one(".result__snippet")
