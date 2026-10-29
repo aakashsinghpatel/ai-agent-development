@@ -1,7 +1,12 @@
 import requests
 from bs4 import BeautifulSoup as bs
 from urllib.parse import urlparse, parse_qs
+from ollama import chat
+import json
 
+MODEL = "qwen3:1.7b"
+
+research_notes = []
 
 def search_web(query, max_results=5):
     """
@@ -83,3 +88,109 @@ def read_webpage(url):
     
     except Exception as e:
         print(e)
+
+
+def add_research_note(source, finding, evidence):
+    """
+    Store an important research finding.
+
+    IMPORTANT:
+    This tool accepts exactly three arguments:
+
+    source: The URL or name of the source.
+
+    finding:The specific claim or conclusion extracted from the source.
+
+    evidence:The text or information from the source that supports the finding.
+
+    Do not use title or summary.
+    
+    Returns:
+        Confirmation message.
+    """
+
+    research_notes.append({
+        "source": source,
+        "finding": finding,
+        "evidence": evidence,
+        "verified": False
+    })
+
+    return {
+        "status": "stored",
+        "finding": finding
+    }
+
+
+def get_research_notes():
+    """
+    Return all research notes collected so far.
+    """
+
+    return [
+        note.copy()
+        for note in research_notes
+    ]
+
+def mark_note_verified(source, finding):
+    """
+    Mark a matching research note as verified.
+    """
+    for note in research_notes:
+        if (note["source"] == source and note["finding"] == finding):
+            note["verified"] = True
+            return {
+                "status": "verified",
+                "finding": finding
+            }
+
+    return {
+        "status": "not_found",
+        "finding": finding
+    }
+
+def verify_finding(source,finding,evidence):
+    """
+    Check whether evidence supports a finding.
+    """
+    response = chat(
+        model=MODEL,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are an evidence verification assistant. "
+                    "Determine whether the supplied evidence "
+                    "supports the supplied finding. "
+                    "Return JSON with exactly two fields: "
+                    "supported and explanation. "
+                    "supported must be true or false."
+                )
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Source:\n{source}\n\n"
+                    f"Finding:\n{finding}\n\n"
+                    f"Evidence:\n{evidence}"
+                )
+            }
+        ],
+        format="json"
+    )
+
+    result = json.loads(
+        response.message.content
+    )
+
+    if result["supported"]:
+        mark_note_verified(source,finding)
+
+    return result
+
+
+def get_verified_research_notes():
+    """
+    Return only verified research notes.
+    """
+    return [note.copy() for note in research_notes if note.get("verified", False)]
