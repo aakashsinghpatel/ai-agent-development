@@ -5,8 +5,14 @@ from langchain_community.vectorstores import FAISS
 
 from pathlib import Path
 
+# Get the directory of the current script
+base_dir = Path(__file__).resolve().parent
+
+# Build path relative to script's location
+file_path = base_dir / "knowledge" / "notes.txt"
+
 # 1. Load document
-loader = TextLoader(Path("knowledge/notes.txt"),encoding="UTF-8")
+loader = TextLoader(file_path,encoding="UTF-8")
 documents = loader.load()
 
 print("Document loaded")

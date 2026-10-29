@@ -30,9 +30,17 @@ async def main():
     prompt = ChatPromptTemplate(messages=[("human", "{query}")]).invoke({"query": query})
     chain = agent
 
-    res = chain.invoke(prompt)
+    res = await chain.ainvoke(prompt)
     print("Result of agent::")
     print(res)
+    print("final result:")
+    print(res["messages"][-1].content)
+
+    print("="*50)
+    print("Debug Agent flow")
+    for msg in res["messages"]:
+        print(msg)
+        print("\n")
 
 if __name__ =="__main__":
     asyncio.run(main())
