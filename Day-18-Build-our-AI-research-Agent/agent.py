@@ -3,7 +3,7 @@ from tool import (
     search_web,
     read_webpage
 )
-MODEL = "qwen3:4b"
+MODEL = "qwen3:1.7b"
 AVAILABLE_TOOLS = {"search_web": search_web,"read_webpage": read_webpage}
 TOOLS = [search_web,read_webpage]
 
@@ -44,3 +44,14 @@ def research_agent(user_request):
                 "content": str(result),
                 "tool_name": tool_name
             })
+
+
+def research_planner(user_request):
+
+    response = chat(model=MODEL, messages=[{"role": "system",
+                "content": ("You are a research planning assistant. "
+                            "Create a concise and ordered research plan "
+                            "for the user's research request. "
+                            "Return only the numbered research steps.")},
+                {"role": "user","content": user_request}])
+    return response.message.content
