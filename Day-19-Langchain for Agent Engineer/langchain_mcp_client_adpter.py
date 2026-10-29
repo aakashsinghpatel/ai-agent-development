@@ -32,5 +32,4 @@ async def get_mcp_tools():
 
     async with MCPAdapter(config) as adapter:
         tools = await adapter.list_tools()
-        print(tools)
         return tools
