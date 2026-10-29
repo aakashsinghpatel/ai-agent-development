@@ -3,7 +3,14 @@ from bs4 import BeautifulSoup as bs
 from urllib.parse import urlparse, parse_qs
 from ollama import chat
 import json
+from tavily import TavilyClient
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+
+# pip install tavily-python
+# for replacing duckduckgo
 MODEL = "qwen3:1.7b"
 
 research_notes = []
@@ -19,36 +26,51 @@ def search_web(query, max_results=5):
         Returns:
             A list of search results.
     """
-    headers = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/130.0.0.0 Safari/537.36"
-    ),
-        "Accept-Language": "en-US,en;q=0.9",
-    }
+    
     try:
-        respose = requests.get("https://html.duckduckgo.com/html/", 
-                               params={"q": query}, 
-                               headers = {"User-Agent": "Mozilla/5.0"}, timeout=20)
-        respose.raise_for_status()
+        """ In duckduckgo getting authentication issue as captha verification
+         while call form python so alternatively use tavily """
+        # headers = {
+        #     "User-Agent": (
+        #         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        #         "AppleWebKit/537.36 (KHTML, like Gecko) "
+        #         "Chrome/130.0.0.0 Safari/537.36"
+        #     ),
+        #         "Accept-Language": "en-US,en;q=0.9",
+        #     }
+        # respose = requests.get("https://html.duckduckgo.com/html/", 
+        #                        params={"q": query}, 
+        #                        headers = {"User-Agent": "Mozilla/5.0"}, timeout=20)
+        # respose.raise_for_status()
 
-        soup =  bs(respose.text, "html.parser")
+        # soup =  bs(respose.text, "html.parser")
         results =[]
-        print(len(soup.select(".results")))
-        for result in soup.select(".result")[:max_results]:
-            title = result.select_one(".result__title")
-            url = result.select_one(".result__a")
-            snippet =result.select_one(".result__snippet")
 
-            if not url:
-                continue
+        client = TavilyClient(os.getenv("TAVILY_API_KEY"))
+        response = client.search(
+            query=query,
+            search_depth="advanced"
+        )
 
-            results.append({ "title": (title.get_text(" ",strip=True) if title else ""),
-                        "url": url.get("href",""),
-                        "snippet": (snippet.get_text(" ",strip=True) if snippet else ""
-                        )})
-        
+        # print(len(soup.select(".results")))
+        # for result in soup.select(".result")[:max_results]:
+        #     title = result.select_one(".result__title")
+        #     url = result.select_one(".result__a")
+        #     snippet =result.select_one(".result__snippet")
+
+        #     if not url:
+        #         continue
+        res = response.get('results', [])
+        if len(res) > 0 :
+            for result in res[:int(max_results)]:
+                title = result.get("title","")
+                url = result.get("url", "")
+                snippet = result.get("content", "")
+
+                if not url:
+                    continue
+
+                results.append({ "title": title,"url": url,"snippet": snippet})
         return results
     except Exception as e:
         print(e)

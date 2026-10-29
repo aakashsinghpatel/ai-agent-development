@@ -130,6 +130,7 @@ def research_agent(user_request,max_steps=100):
             else:
                 try:
                     result = tool_function(**arguments)
+                    # print(result)
         
                 except Exception as e:
         
@@ -140,11 +141,11 @@ def research_agent(user_request,max_steps=100):
         
                     print(f"Tool error: {e}")
         
-                    messages.append({
-                        "role": "tool",
-                        "content": str(result),
-                        "tool_name": tool_name
-                    })
+                messages.append({
+                    "role": "tool",
+                    "content": str(result),
+                    "tool_name": tool_name
+                })
     return (
             "The agent reached its maximum "
             "number of steps before completing "

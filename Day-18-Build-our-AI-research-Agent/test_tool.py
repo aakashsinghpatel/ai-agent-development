@@ -14,7 +14,7 @@ print("\nSEARCH RESULTS\n")
 for result in results:
     print(result["title"])
     print(result["url"])
-    print(result["snippet"])
+    print(result.get("snippet",""))
     print()
 
 
