@@ -11,7 +11,10 @@ def main():
     # chain  = prompt | model 
     """  we can also diectly parse the output of model in stronly rather res.content """
     parser = StrOutputParser()
+
+    """  Chaining with pipe operator to remove manuall calling """
     chain = prompt | model |parser
+
     res = chain.invoke({"question": user_query})
 
     print(res)
