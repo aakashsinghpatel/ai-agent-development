@@ -5,6 +5,8 @@ from schema import ChatRequest, ChatResponse
 from httpx import AsyncClient
 # to manage context(resources ) of servera
 from contextlib import asynccontextmanager
+from config import OLLAMA_BASE_URL
+
 
 
 
@@ -32,7 +34,8 @@ def health():
 async def ready():
     try:
         async with AsyncClient() as client:
-            response = await client.get("http://localhost:11434/api/tags")            
+            response = await client.get(f"{OLLAMA_BASE_URL}/api/tags")   
+            print(response)         
             if response.status_code ==200:
                 return {"status": "ready"}
             else:
@@ -52,6 +55,6 @@ async def chat(request:ChatRequest):
     except Exception as e:
         print("Exception occured: ", e)
         # Below will be return to client as response
-        raise HTTPException(status_code=500, detail="Internal server erro: Agent execution faile")
+        raise HTTPException(status_code=500, detail="Internal server error: Agent execution failed")
 
 
