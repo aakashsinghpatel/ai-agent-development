@@ -3,3 +3,4 @@ langchain-ollama
 fastapi[standard]
 python-dotenv
 httpx
+tenacity
