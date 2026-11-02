@@ -1,17 +1,17 @@
+import os
 from ollama import chat
-
 from tools import (
-    search_web,
-    read_webpage,
     add_research_note,
+    clear_research_notes,
     get_research_notes,
-    verify_finding,
     get_verified_research_notes,
+    read_webpage,
+    search_web,
+    verify_finding,
 )
 
-
-MODEL = "qwen3:1.7b"
-
+MODEL = "qwen3:4b"
+TARGET_VERIFIED_NOTES = 2
 
 AVAILABLE_TOOLS = {
     "search_web": search_web,
@@ -20,7 +20,6 @@ AVAILABLE_TOOLS = {
     "get_research_notes": get_research_notes,
     "verify_finding": verify_finding,
 }
-
 
 TOOLS = [
     search_web,
@@ -31,20 +30,12 @@ TOOLS = [
 ]
 
 
-def generate_report(user_request, verified_notes):
-    """
-    Generate a research report from
-    verified research findings.
-    """
-
-    research_text = "\n\n".join(
+def generate_report(user_request: str, verified_notes: list) -> str:
+    """Generates the final Markdown report from stored findings."""
+    notes_summary = "\n\n".join(
         [
-            (
-                f"Source: {note['source']}\n"
-                f"Finding: {note['finding']}\n"
-                f"Evidence: {note['evidence']}"
-            )
-            for note in verified_notes
+            f"Source: {n['source']}\nFinding: {n['finding']}\nEvidence: {n['evidence']}"
+            for n in verified_notes
         ]
     )
 
@@ -53,265 +44,172 @@ def generate_report(user_request, verified_notes):
         messages=[
             {
                 "role": "system",
-                "content": (
-                    "You are a professional research "
-                    "report writer. "
-                    "Write a clear, structured report "
-                    "using only the supplied verified "
-                    "research findings. "
-                    "Do not invent facts or sources. "
-                    "If the available research is "
-                    "insufficient for a section, say so."
-                ),
+                "content": "You are a research analyst. Write a concise, professional research report in clean Markdown using headers and bullet points.",
             },
             {
                 "role": "user",
-                "content": (
-                    f"Research request:\n"
-                    f"{user_request}\n\n"
-                    f"Verified research findings:\n"
-                    f"{research_text}\n\n"
-                    "Create a report with the following "
-                    "sections:\n"
-                    "1. Executive Summary\n"
-                    "2. Introduction\n"
-                    "3. Key Findings\n"
-                    "4. Analysis\n"
-                    "5. Limitations\n"
-                    "6. Conclusion\n"
-                    "7. Sources\n\n"
-                    "List the sources used in the "
-                    "verified findings. "
-                    "Do not create URLs that were not "
-                    "provided in the research findings."
-                ),
+                "content": f"Topic: {user_request}\n\nVerified Findings:\n{notes_summary}\n\nProduce a structured Markdown report.",
             },
         ],
     )
-
     return response.message.content
 
 
-def research_agent(user_request, max_steps=100, progress_callback=None):
-    def emit(message):
+def research_agent(user_request: str, max_steps: int = 10, progress_callback=None):
+    clear_research_notes()
+
+    def emit(data):
         if progress_callback:
-            progress_callback(message)
+            progress_callback(data)
 
-    """
-    Run the autonomous research agent.
-
-    The agent must collect and verify research
-    findings before it is allowed to finish.
-    """
-
-    plan = create_research_plan(user_request)
-
-    print("\n" + "=" * 60)
-    print("RESEARCH PLAN")
-    print("=" * 60)
-    print(plan)
-
-    # Emit the plan
-    emit({"type": "plan", "message": "Research plan created", "plan": plan})
+    emit(
+        {
+            "type": "plan",
+            "message": "Research plan created",
+            "plan": "1. Search web\n2. Extract facts\n3. Synthesize report",
+        }
+    )
 
     messages = [
         {
             "role": "system",
             "content": (
-                "You are a research agent. "
-                "Investigate the user's request using "
-                "the available tools. "
-                "Follow the research plan carefully. "
-                "First search for relevant sources. "
-                "After reading a useful source, "
-                "extract important findings and call "
-                "add_research_note to store them. "
-                "After storing an important finding, "
-                "use verify_finding to determine whether "
-                "the evidence actually supports the finding. "
-                "Continue researching until the research "
-                "question has been adequately investigated. "
-                "Do not finish the research with zero "
-                "verified findings. "
-                "Do not invent sources or evidence."
+                "You are an automated research assistant. Follow this loop strictly:\n"
+                "1. Call search_web\n"
+                "2. Call read_webpage\n"
+                "3. Call add_research_note with key facts.\n"
+                "Do NOT read more than 2 pages without taking notes."
             ),
         },
-        {
-            "role": "user",
-            "content": (
-                f"Research request:\n{user_request}\n\n" f"Research plan:\n{plan}"
-            ),
-        },
+        {"role": "user", "content": f"Research Topic: {user_request}"},
     ]
 
     for step in range(max_steps):
+        verified = get_verified_research_notes()
 
-        print(f"\n--- Agent Step {step + 1} ---")
+        # Target met check: Stop execution early if target verified notes count is hit
+        if len(verified) >= TARGET_VERIFIED_NOTES:
+            emit(
+                {
+                    "type": "step",
+                    "step": step + 1,
+                    "message": "Target research findings met. Writing final report...",
+                }
+            )
+            report = generate_report(user_request, verified)
+            emit({"type": "complete", "report": report})
+            return report
 
-        # Emit Agent Step here
-        emit({"type": "step", "step": step + 1, "message": (f"Agent step {step + 1}")})
+        # Step cap fallback: Force finish if stuck beyond step 6 with at least 1 verified finding
+        if step >= 6 and len(verified) >= 1:
+            emit(
+                {
+                    "type": "step",
+                    "step": step + 1,
+                    "message": "Maximum research depth reached. Synthesizing available findings...",
+                }
+            )
+            report = generate_report(user_request, verified)
+            emit({"type": "complete", "report": report})
+            return report
 
-        response = chat(model=MODEL, messages=messages, tools=TOOLS)
+        emit({"type": "step", "step": step + 1, "message": f"Agent step {step + 1}"})
+
+        try:
+            response = chat(
+                model=MODEL,
+                messages=messages,
+                tools=TOOLS,
+                options={"temperature": 0.1},
+            )
+        except Exception as err:
+            emit({"type": "error", "message": f"Execution error: {str(err)}"})
+            return None
 
         messages.append(response.message)
 
-        # -------------------------------------------------
-        # The LLM did not request a tool.
-        # Do NOT immediately accept this as completion.
-        # First check whether verified findings exist.
-        # -------------------------------------------------
-
+        # Handle turns where the model produces plain text instead of tool calls
         if not response.message.tool_calls:
-
-            verified_notes = get_verified_research_notes()
-
-            if verified_notes:
-
-                print("\nResearch complete.")
-
-                print("Verified findings collected:", len(verified_notes))
-
-                return response.message.content
-
+            notes = get_research_notes()
+            if notes:
+                latest = notes[-1]
+                verify_finding(latest["source"], latest["finding"], latest["evidence"])
+                emit(
+                    {
+                        "type": "verification",
+                        "message": "Verified recorded note automatically",
+                    }
+                )
             else:
-
-                print("\nAgent attempted to finish " "without verified findings.")
-
-                print("Continuing research...")
-
                 messages.append(
                     {
                         "role": "user",
-                        "content": (
-                            "You attempted to finish without collecting "
-                            "any verified research findings. "
-                            "You MUST perform another research action now. "
-                            "Do not provide a final answer. "
-                            "Choose one of these actions:\n"
-                            "1. Call search_web to find another source.\n"
-                            "2. Call read_webpage to inspect a source.\n"
-                            "3. Call add_research_note after extracting "
-                            "a finding from a source.\n"
-                            "4. Call verify_finding after storing a finding.\n"
-                            "You must call a tool in your next response."
-                        ),
+                        "content": "Please invoke a tool to continue research.",
                     }
                 )
+            continue
 
-                continue
-
-        # -------------------------------------------------
-        # Execute every tool requested by the model.
-        # -------------------------------------------------
-
+        # Execute returned tool calls
         for tool_call in response.message.tool_calls:
+            t_name = tool_call.function.name
+            t_args = tool_call.function.arguments or {}
 
-            tool_name = tool_call.function.name
+            emit({"type": "tool", "tool": t_name, "message": f"Using tool: {t_name}"})
+            t_func = AVAILABLE_TOOLS.get(t_name)
 
-            arguments = tool_call.function.arguments
-
-            print(f"\nCalling tool: {tool_name}")
-
-            print(f"Arguments: {arguments}")
-
-            # Emit the tool name
-            emit(
-                {
-                    "type": "tool",
-                    "tool": tool_name,
-                    "message": (f"Using tool: {tool_name}"),
-                }
-            )
-            # Emit Verify finding
-            if tool_name == "verify_finding":
-
-                emit(
-                    {"type": "verification", "message": ("Verifying research evidence")}
-                )
-
-            tool_function = AVAILABLE_TOOLS.get(tool_name)
-
-            if tool_function is None:
-
-                result = f"Unknown tool: " f"{tool_name}"
-
-            else:
-
+            if t_func:
                 try:
-
-                    result = tool_function(**arguments)
-                    # emit the tool completion status
+                    res = t_func(**t_args)
                     emit(
                         {
                             "type": "tool_complete",
-                            "tool": tool_name,
-                            "message": (f"Completed: {tool_name}"),
+                            "tool": t_name,
+                            "message": f"Completed: {t_name}",
+                        }
+                    )
+                except Exception as e:
+                    res = f"Error executing tool: {str(e)}"
+            else:
+                res = "Tool not found."
+
+            # Hard truncation on long webpage outputs to protect context length
+            if t_name == "read_webpage" and isinstance(res, str):
+                truncated_res = (
+                    res[:1200] + "\n...[Webpage truncated to preserve context buffer]"
+                )
+            else:
+                truncated_res = str(res)
+
+            messages.append(
+                {"role": "tool", "content": truncated_res, "tool_name": t_name}
+            )
+
+            # Auto-verify notes right after saving them
+            if t_name == "add_research_note":
+                notes = get_research_notes()
+                if notes:
+                    latest = notes[-1]
+                    verify_finding(
+                        latest["source"], latest["finding"], latest["evidence"]
+                    )
+                    emit(
+                        {
+                            "type": "verification",
+                            "message": "Verified recorded note automatically",
                         }
                     )
 
-                except Exception as e:
+    # Final sweep
+    verified = get_verified_research_notes()
+    if verified:
+        report = generate_report(user_request, verified)
+        emit({"type": "complete", "report": report})
+        return report
 
-                    result = {"status": "error", "tool": tool_name, "error": str(e)}
-
-                    print(f"Tool error: {e}")
-
-            messages.append(
-                {"role": "tool", "content": str(result), "tool_name": tool_name}
-            )
-
-    return (
-        "The agent reached its maximum "
-        "number of steps before completing "
-        "the research."
-    )
+    emit({"type": "error", "message": "Loop ended without sufficient findings."})
+    return None
 
 
-def create_research_plan(user_request):
-    """
-    Create a concise research plan.
-    """
-
-    response = chat(
-        model=MODEL,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are a research planning assistant. "
-                    "Create a concise and ordered research "
-                    "plan for the user's research request. "
-                    "The plan should identify the main "
-                    "research objectives that need to be "
-                    "investigated. "
-                    "Return only the numbered research steps."
-                ),
-            },
-            {"role": "user", "content": user_request},
-        ],
-    )
-
-    return response.message.content
-
-
-def run_agent(request):
-
-    research_agent(request, max_steps=100)
-
-    verified_notes = get_verified_research_notes()
-
-    if not verified_notes:
-        print("\nNo verified research findings " "were collected.")
-        raise Exception("No verified research findings were collected.")
-
-    print("\nVerified findings:", len(verified_notes))
-
-    report = generate_report(user_request=request, verified_notes=verified_notes)
-
-    print("\n")
-    print("=" * 60)
-    print("FINAL RESEARCH REPORT")
-    print("=" * 60)
-    print("\n")
-
-    print(report)
-    return report
+def run_agent(request: str) -> str:
+    """Helper entry point for synchronous execution."""
+    return research_agent(request, max_steps=10)
