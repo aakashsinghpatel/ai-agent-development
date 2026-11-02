@@ -1,28 +1,60 @@
-from fastapi import FastAPI
-
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
+from agent import run_agent
+from schemas import ChatRequest, ChatResponse
 
 
 @asynccontextmanager
-async def lifecycle(app: FastAPI):
-    print("Inializing all work.")
+async def lifespan(app: FastAPI):
+    print("Starting Research AI application")
     yield
-    print("closing all the conencttion")
+    print("Shutting down Research AI application")
 
 
-app = FastAPI(title="AI agent Application", version="1.0.0", lifespan= lifecycle)
+app = FastAPI(
+    title="Research AI Agent",
+    version="1.0.0",
+    lifespan=lifespan,
+)
 
-#  it is to server statuc files
-# attache another ASGI application to a specific URL path. (cretae rout of it)
-app.mount('/static', StaticFiles(directory="frontend"),name="static")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.get('/')
+app.mount(
+    "/static",
+    StaticFiles(directory="frontend"),
+    name="static",
+)
+
+
+@app.get("/")
 async def home():
-    print("Enter home")
-    return FileResponse('frontend/index.html')
+    return FileResponse("frontend/index.html")
 
-@app.get('/health')
-def health():
-    return {"health": "OK"}
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
+
+
+@app.post("/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    if not request.message.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty.")
+
+    try:
+        result = await run_in_threadpool(run_agent, request.message)
+
+        return ChatResponse(response=result)
+
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
