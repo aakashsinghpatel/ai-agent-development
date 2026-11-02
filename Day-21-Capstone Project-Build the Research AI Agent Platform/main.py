@@ -8,6 +8,13 @@ from fastapi.staticfiles import StaticFiles
 from agent import run_agent
 from schemas import ChatRequest, ChatResponse
 
+import asyncio
+import json
+
+from fastapi.responses import StreamingResponse
+
+from agent import research_agent
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -58,3 +65,40 @@ async def chat(request: ChatRequest):
 
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+# Create the event stream
+@app.get("/research")
+async def research(topic: str):
+
+    queue = asyncio.Queue()
+
+    def progress_callback(event):
+        queue.put_nowait(event)
+
+    async def event_stream():
+
+        task = asyncio.create_task(
+            asyncio.to_thread(research_agent, topic, 8, progress_callback)
+        )
+
+        while True:
+
+            if task.done() and queue.empty():
+                break
+
+            try:
+
+                event = await asyncio.wait_for(queue.get(), timeout=0.5)
+
+                yield ("data: " + json.dumps(event) + "\n\n")
+
+            except asyncio.TimeoutError:
+
+                continue
+
+        result = await task
+
+        yield ("data: " + json.dumps({"type": "complete", "report": result}) + "\n\n")
+
+    return StreamingResponse(event_stream(), media_type="text/event-stream")

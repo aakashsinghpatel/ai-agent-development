@@ -92,7 +92,11 @@ def generate_report(user_request, verified_notes):
     return response.message.content
 
 
-def research_agent(user_request, max_steps=100):
+def research_agent(user_request, max_steps=100, progress_callback=None):
+    def emit(message):
+        if progress_callback:
+            progress_callback(message)
+
     """
     Run the autonomous research agent.
 
@@ -106,6 +110,9 @@ def research_agent(user_request, max_steps=100):
     print("RESEARCH PLAN")
     print("=" * 60)
     print(plan)
+
+    # Emit the plan
+    emit({"type": "plan", "message": "Research plan created", "plan": plan})
 
     messages = [
         {
@@ -140,6 +147,9 @@ def research_agent(user_request, max_steps=100):
     for step in range(max_steps):
 
         print(f"\n--- Agent Step {step + 1} ---")
+
+        # Emit Agent Step here
+        emit({"type": "step", "step": step + 1, "message": (f"Agent step {step + 1}")})
 
         response = chat(model=MODEL, messages=messages, tools=TOOLS)
 
@@ -204,6 +214,21 @@ def research_agent(user_request, max_steps=100):
 
             print(f"Arguments: {arguments}")
 
+            # Emit the tool name
+            emit(
+                {
+                    "type": "tool",
+                    "tool": tool_name,
+                    "message": (f"Using tool: {tool_name}"),
+                }
+            )
+            # Emit Verify finding
+            if tool_name == "verify_finding":
+
+                emit(
+                    {"type": "verification", "message": ("Verifying research evidence")}
+                )
+
             tool_function = AVAILABLE_TOOLS.get(tool_name)
 
             if tool_function is None:
@@ -215,6 +240,14 @@ def research_agent(user_request, max_steps=100):
                 try:
 
                     result = tool_function(**arguments)
+                    # emit the tool completion status
+                    emit(
+                        {
+                            "type": "tool_complete",
+                            "tool": tool_name,
+                            "message": (f"Completed: {tool_name}"),
+                        }
+                    )
 
                 except Exception as e:
 

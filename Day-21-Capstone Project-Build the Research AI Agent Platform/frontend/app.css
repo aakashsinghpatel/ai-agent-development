@@ -480,3 +480,37 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+
+.activity-list {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 10px;
+
+  margin-top: 18px;
+}
+
+.activity-item {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 10px 12px;
+
+  border-radius: 10px;
+
+  background: var(--surface);
+
+  color: #cbd2dc;
+
+  font-size: 13px;
+}
+
+.activity-icon {
+  color: var(--accent-light);
+
+  font-weight: 700;
+}
